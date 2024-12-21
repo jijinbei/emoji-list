@@ -22,8 +22,17 @@ class EmojiDataList:
         self.data = []
         return None
 
-    def append(self, emoji_data):
-        self.data.append(emoji_data)
+    def unique_append(self, emoji_data):
+        if not any(
+            item.text == emoji_data.text and item.emoji == emoji_data.emoji
+            for item in self.data
+        ):
+            self.data.append(emoji_data)
+
+    def concat(self, emoji_data_list):
+        if type(emoji_data_list) is not EmojiDataList:
+            raise TypeError("emoji_data_list must be an instance of EmojiDataList")
+        self.data.extend(emoji_data_list.data)
 
     def to_csv(self, csv_file: str):
         with open(csv_file, "w", newline="", encoding="utf-8") as f:

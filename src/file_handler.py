@@ -1,11 +1,12 @@
 from watchdog.events import FileSystemEventHandler
 import re
+import csv
 import os
-from typing import List
+from typing import List, Dict
 from openai import OpenAI
 
 from api import fetch_emojis
-from data import EmojiDataList
+from data import EmojiDataList, EmojiData
 
 
 class TypstFileHandler(FileSystemEventHandler):
@@ -23,20 +24,46 @@ class TypstFileHandler(FileSystemEventHandler):
             print(f"{self.typst_file}が変更されました。進行中...")
             with open(self.typst_file, "r", encoding="utf-8") as f:
                 content = f.read()
+
+            # すべてのemoji-list項目を解析
             items = emoji_list_parser(content)
-            if items == None:
+            if items == []:
                 return None
 
-            emoji_data_list = EmojiDataList()
-            # ChatGPT APIで絵文字を取得
-            for item in items:
-                # ToDo: 変わっていないものはAPIを呼ばないようにする
-                emoji_data = fetch_emojis(client=self.client, text=item)
-                if emoji_data != None:
-                    emoji_data_list.append(emoji_data)
+            # 既存データをCSVから読み込む
+            existing_data = self.load_existing_data()
 
-            # CSVファイルに書き込み
-            emoji_data_list.to_csv(self.output_csv)
+            # 新規データを取得
+            new_data = EmojiDataList()
+            for item in items:
+                if not any(data.text == item for data in existing_data.data):
+                    # 新しい項目のみAPIで取得
+                    emoji_data = fetch_emojis(client=self.client, text=item)
+                    if emoji_data:
+                        new_data.unique_append(emoji_data)
+
+            # 既存データと新規データを結合
+            existing_data.concat(new_data)
+
+            # 結果をCSVファイルに書き込み
+            existing_data.to_csv(self.output_csv)
+
+    def load_existing_data(self) -> EmojiDataList:
+        """
+        既存のCSVデータを読み込んでEmojiDataListとして返す
+        """
+        emoji_data_list = EmojiDataList()
+        if not os.path.exists(self.output_csv):
+            return emoji_data_list
+
+        with open(self.output_csv, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if "text" in row and "emoji" in row:
+                    emoji_data_list.unique_append(
+                        EmojiData(text=row["text"], emoji=row["emoji"])
+                    )
+        return emoji_data_list
 
 
 def emoji_list_parser(content: str) -> List[str]:

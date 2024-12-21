@@ -8,7 +8,8 @@ from file_handler import TypstFileHandler
 
 
 # 設定
-TYPST_FILE = os.path.abspath(r"typst\example\test.typ")
+# ToDo: 簡単に設定できるようにする
+TYPST_FILE = os.path.abspath(r"example\test.typ")
 OUTPUT_CSV = os.path.join(os.path.dirname(TYPST_FILE), "emoji_list.csv")
 
 # ファイルの存在確認
