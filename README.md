@@ -11,3 +11,17 @@ OPENAI_API_KEY="sk-proj-cXRxSZD......"
 ```
 
 のように書きこむ
+
+## 実行方法
+
+実行方法は次のように書く
+
+```
+rye run emoji-list <typst-file>
+```
+
+例えば、
+
+```
+rye run emoji-list example\test.typ
+```

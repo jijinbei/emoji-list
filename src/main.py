@@ -3,13 +3,18 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from watchdog.observers import Observer
 import time
+import sys
 
 from file_handler import TypstFileHandler
 
 
 # 設定
 # ToDo: 簡単に設定できるようにする
-TYPST_FILE = os.path.abspath(r"example\test.typ")
+args = sys.argv
+if len(args) < 2:
+    raise ValueError("引数にTypstファイルのパスを指定してください。")
+
+TYPST_FILE = os.path.abspath(args[1])
 OUTPUT_CSV = os.path.join(os.path.dirname(TYPST_FILE), "emoji_list.csv")
 
 # ファイルの存在確認
